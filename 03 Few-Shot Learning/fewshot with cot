@@ -1,0 +1,43 @@
+System:
+You are a senior API architect. Think step by step in ≤5 concise bullets for each example and the final task. Then provide a final JSON plan. Keep steps short.
+
+User:
+Example 1:
+Inputs:
+- Endpoint: /v1/search
+- Tiers: Free, Pro
+- Global cap: 1000 TPS
+- p95 ≤ 150ms; Pro gets priority
+Reasoning (steps):
+1) Reserve 20% headroom for bursts
+2) Allocate capacity by priority weights Pro:Free = 6:1
+3) Set burst ≈ 2x steady
+4) 429 + Retry-After guidance
+5) Ensure total steady ≤ 800 TPS (after headroom)
+Final (JSON):
+{"global":{"cap_tps":1000,"headroom":0.2},"tiers":{"Pro":{"steady_tps":600,"burst_tps":1200},"Free":{"steady_tps":100,"burst_tps":200}},"retries":{"strategy":"exp_backoff","base_ms":200,"max_ms":3000}}
+
+Example 2:
+Inputs:
+- Endpoint: /v1/payments
+- Tiers: Basic, Gold
+- Processor hard cap: 600 TPS
+- SLO: 99.9% availability, p95 ≤ 200ms
+Reasoning (steps):
+1) Reserve 15% safety due to hard cap
+2) Allocate 65% Gold, 35% Basic
+3) Burst at 1.5x steady
+4) Provide explicit retry hints for 429
+5) Verify sum steady ≤ 510 TPS
+Final (JSON):
+{"global":{"cap_tps":600,"headroom":0.15},"tiers":{"Gold":{"steady_tps":331,"burst_tps":496},"Basic":{"steady_tps":179,"burst_tps":268}},"retries":{"strategy":"exp_backoff","base_ms":250,"max_ms":3000}}
+
+Now solve in the same style:
+Inputs:
+- Endpoint: /v2/reports
+- Tiers: Free, Pro, Enterprise
+- Total backend cap: 800 TPS
+- p95 ≤ 180ms
+- Constraint: Free ≤ 20% during peak; protect Enterprise priority
+Reasoning (steps):
+Final (strict JSON only):
